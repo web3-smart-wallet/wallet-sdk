@@ -2,6 +2,7 @@ name: web3_smartwatch_sdk
 description: A starting point for Dart libraries or applications.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
+publish_to: none
 
 environment:
   sdk: ^3.6.1
@@ -9,7 +10,10 @@ environment:
 # Add regular dependencies here.
 dependencies:
   openapi_generator_annotations: ^6.1.0
-  # path: ^1.8.0
+  openapi:
+    path: ./api/web3-smartwatch-client
+  web3dart: ^2.7.3
+  bip39: ^1.0.6
 
 dev_dependencies:
   lints: ^5.0.0

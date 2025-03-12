@@ -1,4 +1,4 @@
-// Openapi Generator last run: : 2025-03-12T10:12:06.289028
+// Openapi Generator last run: : 2025-03-12T13:42:07.227962
 import 'package:openapi_generator_annotations/openapi_generator_annotations.dart';
 
 @Openapi(
@@ -6,8 +6,11 @@ import 'package:openapi_generator_annotations/openapi_generator_annotations.dart
     path:
         'https://raw.githubusercontent.com/web3-smart-wallet/web3-smartwatch-go-server/refs/heads/main/apispec.yaml',
   ),
-  generatorName: Generator.dart,
+  generatorName: Generator.dio,
   runSourceGenOnOutput: true,
-  outputDirectory: '.',
+  forceAlwaysRun: true,
+  skipIfSpecIsUnchanged: false,
+  outputDirectory: './api/web3-smartwatch-client',
+  debugLogging: true,
 )
 class NetworkClient {}
