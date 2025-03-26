@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 analysis_options.yaml
 doc/ApiSearchAddressAddressGet200Response.md
@@ -44,18 +43,3 @@ lib/src/model/token_balance.dart
 lib/src/model/token_type.dart
 lib/src/serializers.dart
 pubspec.yaml
-test/api_search_address_address_get200_response_test.dart
-test/api_search_did_did_get200_response_test.dart
-test/api_user_address_balance_get200_response_test.dart
-test/api_user_address_get200_response_test.dart
-test/api_user_address_nfts_get200_response_test.dart
-test/error_test.dart
-test/nft_asset_test.dart
-test/nft_test.dart
-test/nft_trait_test.dart
-test/paginated_nft_result_test.dart
-test/pagination_test.dart
-test/token_balance_test.dart
-test/token_test.dart
-test/token_type_test.dart
-test/user_api_test.dart
