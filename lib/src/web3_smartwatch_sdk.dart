@@ -15,7 +15,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class WalletImpl extends Wallet {
   final EthPrivateKey _ethPrivateKey;
   final Future<Balance> Function(String address) _getAddressBalance;
-  final Future<Balance?> Function(String address, String contractAddress) _getAddressBalanceByToken;
+  final Future<Balance?> Function(String address, String contractAddress)
+      _getAddressBalanceByToken;
 
   WalletImpl({
     required super.address,
@@ -24,27 +25,30 @@ class WalletImpl extends Wallet {
     required super.mnemonic,
     required EthPrivateKey ethPrivateKey,
     required Future<Balance> Function(String address) getAddressBalance,
-    required Future<Balance?> Function(String address, String contractAddress) getAddressBalanceByToken,
-  }) : _ethPrivateKey = ethPrivateKey,
-       _getAddressBalance = getAddressBalance,
-       _getAddressBalanceByToken = getAddressBalanceByToken,
-       super();
+    required Future<Balance?> Function(String address, String contractAddress)
+        getAddressBalanceByToken,
+  })  : _ethPrivateKey = ethPrivateKey,
+        _getAddressBalance = getAddressBalance,
+        _getAddressBalanceByToken = getAddressBalanceByToken,
+        super();
   @override
   Future<Balance> getBalance() => _getAddressBalance(address);
 
   @override
-  Future<Balance?> getBalanceByContractAddress(String contractAddress) => 
+  Future<Balance?> getBalanceByContractAddress(String contractAddress) =>
       _getAddressBalanceByToken(address, contractAddress);
 
   @override
   Future<String> signMessage(String message) async {
     final messageBytes = utf8.encode(message);
-    final signature = _ethPrivateKey.signToUint8List(messageBytes, isEIP1559: false);
+    final signature =
+        _ethPrivateKey.signToUint8List(messageBytes, isEIP1559: false);
     return HEX.encode(signature);
   }
 
   @override
-  Future<bool> verifyMessage({required String message, required String signature}) async {
+  Future<bool> verifyMessage(
+      {required String message, required String signature}) async {
     try {
       final messageBytes = utf8.encode(message);
       final messageHash = keccak256(messageBytes);
@@ -56,40 +60,42 @@ class WalletImpl extends Wallet {
       if (v != 27 && v != 28) {
         return false;
       }
-      final msgSignature = MsgSignature(bytesToUnsignedInt(r), bytesToUnsignedInt(s), v);
+      final msgSignature =
+          MsgSignature(bytesToUnsignedInt(r), bytesToUnsignedInt(s), v);
       final publicKey = _ethPrivateKey.publicKey;
       // remove the leading 04
       final publicKeyBytes = publicKey.getEncoded(false).sublist(1);
-      final isValid = isValidSignature(messageHash, msgSignature, publicKeyBytes);
+      final isValid =
+          isValidSignature(messageHash, msgSignature, publicKeyBytes);
       return isValid;
     } catch (e) {
       return false;
     }
   }
-
 }
 
 class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
   String? _currentWalletAddress;
   final FlutterSecureStorage _secureStorage;
   final RetryOptions _retryOptions;
-    
+
   Web3SmartwatchSdk({
     FlutterSecureStorage? secureStorage,
-  }) : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
-       _retryOptions = RetryOptions(
-        delayFactor: Duration(seconds: 1), 
-        maxDelay: Duration(seconds: 10), 
-        maxAttempts: 5,                   
-        randomizationFactor: 0.25,   
-      ); 
-
-  
+    super.basePathOverride,
+    super.dio,
+  })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
+        _retryOptions = RetryOptions(
+          delayFactor: Duration(seconds: 1),
+          maxDelay: Duration(seconds: 10),
+          maxAttempts: 5,
+          randomizationFactor: 0.25,
+        );
 
   Future<String?> _loadPrivateKey(String address) async {
-    final encryptedData = await _secureStorage.read(key: 'private_key_$address');
+    final encryptedData =
+        await _secureStorage.read(key: 'private_key_$address');
     if (encryptedData == null) return null;
-    
+
     return encryptedData;
   }
 
@@ -119,7 +125,8 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
       if (statusCode == 429) {
         final retryAfter = e.response?.headers.value('Retry-After');
         if (retryAfter != null) {
-          final seconds = int.tryParse(retryAfter) ?? 60; // default to 60 seconds?
+          final seconds =
+              int.tryParse(retryAfter) ?? 60; // default to 60 seconds?
           await Future.delayed(Duration(seconds: seconds));
           return true;
         }
@@ -129,7 +136,9 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
   }
 
   // Try to find the token in current page
-  Balance? _getTokenBalanceFromResponse(Response<ApiUserAddressBalanceGet200Response> response, String contractAddress) {
+  Balance? _getTokenBalanceFromResponse(
+      Response<ApiUserAddressBalanceGet200Response> response,
+      String contractAddress) {
     final tokens = response.data?.tokens;
     if (tokens == null) return null;
 
@@ -148,15 +157,14 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
     return null;
   }
 
-
-
   /// Get balance for an address (internal method used by WalletImpl)
   Future<Balance> getAddressBalance(String address) async {
-      return Balance(balance: "0", decimals: "18");
+    return Balance(balance: "0", decimals: "18");
   }
 
   /// Get token balance for an address (internal method used by WalletImpl)
-  Future<Balance?> getAddressBalanceByToken(String address, String contractAddress) async {
+  Future<Balance?> getAddressBalanceByToken(
+      String address, String contractAddress) async {
     String? nextPageToken;
     try {
       do {
@@ -167,8 +175,9 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
           ),
           retryIf: (e) => _isRetriable(e),
         );
-        try{
-          final balance = _getTokenBalanceFromResponse(response, contractAddress);
+        try {
+          final balance =
+              _getTokenBalanceFromResponse(response, contractAddress);
           if (balance != null) return balance;
         } catch (e) {
           print('Error processing token: $e');
@@ -187,20 +196,21 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
     final String mnemonic = bip39.generateMnemonic();
     final seed = bip39.mnemonicToSeed(mnemonic);
     final root = bip32.BIP32.fromSeed(seed);
-    final path = "m/44'/60'/0'/0/0"; 
+    final path = "m/44'/60'/0'/0/0";
     final childKey = root.derivePath(path);
     final privateKeyBytes = childKey.privateKey!;
     final privateKeyHex = HEX.encode(privateKeyBytes);
     final ethPrivateKey = EthPrivateKey.fromHex(privateKeyHex);
     final address = ethPrivateKey.address.hex;
 
-    await _secureStorage.write(key: 'private_key_$address', value: privateKeyHex);
+    await _secureStorage.write(
+        key: 'private_key_$address', value: privateKeyHex);
     await _secureStorage.write(key: 'current_wallet_address', value: address);
-   
+
     return CreateWalletResponse(
       address: address,
       privateKey: privateKeyHex,
-      did: did ?? "", 
+      did: did ?? "",
       mnemonic: mnemonic,
     );
   }
@@ -208,19 +218,20 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
   @override
   Future<Wallet?> getWallet() async {
     // First try to get the current wallet address from secure storage
-    _currentWalletAddress ??= await _secureStorage.read(key: 'current_wallet_address');
+    _currentWalletAddress ??=
+        await _secureStorage.read(key: 'current_wallet_address');
     if (_currentWalletAddress == null) return null;
-    
+
     final String? privateKey = await _loadPrivateKey(_currentWalletAddress!);
     if (privateKey == null) return null;
 
     final ethPrivateKey = EthPrivateKey.fromHex(privateKey);
     final String address = ethPrivateKey.address.hex;
-    
+
     return WalletImpl(
-      address: address, 
+      address: address,
       privateKey: privateKey,
-      did: "", 
+      did: "",
       mnemonic: "",
       ethPrivateKey: ethPrivateKey,
       getAddressBalance: getAddressBalance,
