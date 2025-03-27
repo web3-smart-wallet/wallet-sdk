@@ -183,7 +183,7 @@ class Web3SmartwatchSdk extends Openapi implements Web3SmartwatchInterface {
           print('Error processing token: $e');
         }
         nextPageToken = response.data?.nextPageToken;
-      } while (nextPageToken != null);
+      } while (nextPageToken != null && nextPageToken.isNotEmpty);
       return null;
     } catch (e) {
       print('Error in getAddressBalanceByToken: $e');
